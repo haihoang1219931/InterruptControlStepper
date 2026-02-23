@@ -35,7 +35,7 @@ uint8_t statePulse = STATE_HIGH;
 uint8_t numWaitPulse = 2;
 uint8_t pulseCount = 0;
 
-float d0 = 100;
+float d0 = 200;
 float delayTime = d0;
 uint8_t stateControl;
 float delayAccel(float stepCount, float delayCur) {
@@ -148,6 +148,7 @@ void motionControlLoop() {
     break;
     case MOTOR_EXECUTE_DONE: {
       Serial.println("Done");
+      digitalWrite(enablePin, HIGH);
       stateControl = MOTOR_EXECUTE_WAIT_COMMAND;
     }
     break;
@@ -221,7 +222,7 @@ void cruiseSpeed() {
     break;
     case MOTION_CHECK_COUNTER: {
       stepCountCruise ++;              
-      if(stepCountCruise < (uint32_t)(200*8*5)) {
+      if(stepCountCruise < (uint32_t)(200*8*1)) {
         statePulse = STATE_HIGH;
         motionCruiseState = MOTION_PULSE;
       } else {
