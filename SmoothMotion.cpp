@@ -38,7 +38,7 @@ void SmoothMotion::setupTarget(
   m_numStepDecel = stepsDecel;
   m_targetDirection = direction;
   m_isAccel = isAccel;
-  m_numWaitPulse = accelStartWaitPulse;
+  m_numWaitPulse = (float)accelStartWaitPulse;
   m_minWaitPulse = minWaitPulse;
 
   m_totalPulse = 0;
@@ -81,7 +81,7 @@ float SmoothMotion::delayDecel(float stepCount, float delayCur) {
   // Serial.print("]");
   // Serial.print(" s[");
   // Serial.print(stepCount);
-  // Serial.print("] T:");
+  // Serial.println("] T:");
 #ifndef DEBUG_COUNT_STEP
   float nextDelay = delayCur * (4.0f*stepCount + 1.0f) / (4.0f*stepCount - 1.0f);
   // nextDelay = delayCur+1;
@@ -104,14 +104,14 @@ void SmoothMotion::changeStateControl(int newState)
       }
       
     }
-    switch(m_stateControl){
-      case MOTOR_EXECUTE_INCREASE_SPEED: Serial.println("Accel");
-      break;
-      case MOTOR_EXECUTE_CRUISE_SPEED: Serial.println("Cruise");
-      break;
-      case MOTOR_EXECUTE_DECREASE_SPEED: Serial.println("Decel");
-      break;
-    }
+    // switch(m_stateControl){
+    //   case MOTOR_EXECUTE_INCREASE_SPEED: Serial.println("Accel");
+    //   break;
+    //   case MOTOR_EXECUTE_CRUISE_SPEED: Serial.println("Cruise");
+    //   break;
+    //   case MOTOR_EXECUTE_DECREASE_SPEED: Serial.println("Decel");
+    //   break;
+    // }
   }
 }
 
@@ -160,12 +160,12 @@ void SmoothMotion::increaseSpeed() {
   if(m_stepCountAccel >= 29) m_enableLogPulse = true;
 #endif
   if(m_stepCountAccel >= m_numStepAccel){
-    Serial.print(" ID: ");
-    Serial.print(m_id);
-    Serial.print(" Accel: ");
-    Serial.print(m_stepCountAccel);
-    Serial.print(" totalPulse: ");
-    Serial.println(m_totalPulse);
+    // Serial.print(" ID: ");
+    // Serial.print(m_id);
+    // Serial.print(" Accel: ");
+    // Serial.print(m_stepCountAccel);
+    // Serial.print(" totalPulse: ");
+    // Serial.println(m_totalPulse);
     changeStateControl(MOTOR_EXECUTE_CRUISE_SPEED);
   }
 }
@@ -176,12 +176,12 @@ void SmoothMotion::cruiseSpeed() {
   m_statePulse = STATE_HIGH;
   m_stepCountCruise ++;
   if(m_stepCountCruise >= m_numStepCruise){
-    Serial.print(" ID: ");
-    Serial.print(m_id);
-    Serial.print(" Cruise: ");
-    Serial.print(m_stepCountCruise);
-    Serial.print(" totalPulse: ");
-    Serial.println(m_totalPulse);
+    // Serial.print(" ID: ");
+    // Serial.print(m_id);
+    // Serial.print(" Cruise: ");
+    // Serial.print(m_stepCountCruise);
+    // Serial.print(" totalPulse: ");
+    // Serial.println(m_totalPulse);
     changeStateControl(m_isAccel? MOTOR_EXECUTE_DECREASE_SPEED:MOTOR_EXECUTE_DONE);
   }
 }
@@ -193,12 +193,12 @@ void SmoothMotion::decreaseSpeed() {
   m_stepCountDecel ++;
   m_numWaitPulse = delayDecel(m_numStepDecel - m_stepCountDecel,m_numWaitPulse);  
   if(m_stepCountDecel >= m_numStepDecel) {
-    Serial.print(" ID: ");
-    Serial.print(m_id);
-    Serial.print(" Decel: ");
-    Serial.print(m_stepCountDecel);
-    Serial.print(" totalPulse: ");
-    Serial.println(m_totalPulse);
+    // Serial.print(" ID: ");
+    // Serial.print(m_id);
+    // Serial.print(" Decel: ");
+    // Serial.print(m_stepCountDecel);
+    // Serial.print(" totalPulse: ");
+    // Serial.println(m_totalPulse);
     changeStateControl(MOTOR_EXECUTE_DONE);
   }
 }
