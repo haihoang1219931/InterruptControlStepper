@@ -31,7 +31,7 @@ SmoothMotion::SmoothMotion(uint32_t id, int stepPin1, int stepPin2, int stepPin3
 // }
 
 void SmoothMotion::setupTarget(
-  int stepsAccel, int stepsCruise, int stepsDecel, 
+  uint32_t stepsAccel, uint32_t stepsCruise, uint32_t stepsDecel, 
   int direction, bool isAccel,  uint32_t accelStartWaitPulse, uint32_t minWaitPulse) {
   m_numStepAccel = stepsAccel;
   m_numStepCruise = stepsCruise;
@@ -68,6 +68,7 @@ float SmoothMotion::delayAccel(float stepCount, float delayCur) {
   // Serial.println("] T:");
 #ifndef DEBUG_COUNT_STEP
   float nextDelay = delayCur * (4.0f*stepCount - 1.0f) / (4.0f*stepCount + 1.0f);
+  // nextDelay = delayCur-1;
   return nextDelay > m_minWaitPulse ? nextDelay: m_minWaitPulse;
 #else
   return delayCur;
@@ -82,7 +83,9 @@ float SmoothMotion::delayDecel(float stepCount, float delayCur) {
   // Serial.print(stepCount);
   // Serial.print("] T:");
 #ifndef DEBUG_COUNT_STEP
-  return delayCur * (4.0f*stepCount + 1.0f) / (4.0f*stepCount - 1.0f);
+  float nextDelay = delayCur * (4.0f*stepCount + 1.0f) / (4.0f*stepCount - 1.0f);
+  // nextDelay = delayCur+1;
+  return nextDelay;
 #else
   return delayCur;
 #endif

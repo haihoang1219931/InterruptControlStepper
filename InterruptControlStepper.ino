@@ -1,4 +1,5 @@
-#ifndef SIMPLE_PULSE
+#define MOTION_TEST
+#ifdef MOTION_TEST
 #include "SmoothMotion.h"
 #define enPin 8
 #define stepXPin 2 //X.STEP
@@ -10,6 +11,10 @@
 #define limitY 10 // Y.LIMIT
 SmoothMotion motionDriver1(1,enPin, dirXPin, stepXPin);
 SmoothMotion motionDriver2(2,enPin, dirYPin, stepYPin);
+float dZero(float acceleration) {
+  float _c0 = 0.676 * sqrt(2.0 / acceleration) * 1000000.0; // Equation 15
+  return _c0;
+}
 void enableMotionTask(bool enable)
 {
   if(enable)
@@ -17,6 +22,15 @@ void enableMotionTask(bool enable)
   else
     TIMSK1 &= ~(1 << OCIE1A);
 }
+uint32_t ratio1 = 1;
+uint32_t totalSteps1 = 10000 / ratio1;
+uint32_t startDelay1 = 800 * ratio1;
+uint32_t minDelay1 = 4 * ratio1;
+uint32_t ratio2 = 4;
+uint32_t totalSteps2 = 10000 / ratio2;
+uint32_t startDelay2 = 100 * ratio2;
+uint32_t minDelay2 = 4 * ratio2;
+int dir =1;
 void setup()
 {
   Serial.begin(38400);
@@ -28,7 +42,7 @@ void setup()
   pinMode(stepYPin, OUTPUT);
 
   digitalWrite(enPin, LOW);
-  digitalWrite(dirXPin, HIGH);
+  digitalWrite(dirXPin, LOW);
   digitalWrite(stepXPin, HIGH);
   digitalWrite(dirYPin, HIGH);
   digitalWrite(stepYPin, HIGH);
@@ -45,22 +59,25 @@ void setup()
   interrupts(); // enable all interrupts
   enableMotionTask(true);
   Serial.println("===Start===");
-  uint32_t ratio1 = 1;
-  uint32_t totalSteps1 = 10000 / ratio1;
-  uint32_t startDelay1 = 100 * ratio1;
-  uint32_t minDelay1 = 4 * ratio1;
-  uint32_t ratio2 = 4;
-  uint32_t totalSteps2 = 10000 / ratio2;
-  uint32_t startDelay2 = 100 * ratio2;
-  uint32_t minDelay2 = 4 * ratio2;
+  float d0 = dZero(50000000.0f);
+  Serial.print("dZero: ");
+  Serial.println(d0);
+  ratio1 = 1;
+  totalSteps1 = 200000 / ratio1;
+  startDelay1 = 4;
+  minDelay1 = 4 * ratio1;
+  ratio2 = 4;
+  totalSteps2 = 10000 / ratio2;
+  startDelay2 = 100 * ratio2;
+  minDelay2 = 4 * ratio2;
   motionDriver1.setupTarget(totalSteps1 * 2 / 10,
-                            totalSteps1 * 6 / 10,
+                            1600,
                             totalSteps1 * 2 / 10,
-                            1,true,startDelay1,minDelay1);
-  motionDriver2.setupTarget(totalSteps2 * 2 / 10,
-                            totalSteps2 * 6 / 10,
-                            totalSteps2 * 2 / 10,
-                            1,true,startDelay2,minDelay2);
+                            1,false,startDelay1,minDelay1);
+  // motionDriver2.setupTarget(totalSteps2 * 2 / 10,
+  //                           totalSteps2 * 6 / 10,
+  //                           totalSteps2 * 2 / 10,
+  //                           1,true,startDelay2,minDelay2);
   // while(motionDriver1.getCurrentSteps() < totalSteps1)
   // // for(int i=0;i<280000;i++)
   // {
@@ -88,6 +105,18 @@ void setup()
 void loop()
 {
   // delay(5000);
+  if(motionDriver1.getCurrentSteps() >= 1600)
+  {
+    dir=-dir;
+    digitalWrite(dirXPin, dir > 0 ? LOW:HIGH);
+    delay(2000);        
+    motionDriver1.setupTarget(totalSteps1 * 2 / 10,
+                            1600,
+                            totalSteps1 * 2 / 10,
+                            -1,false,startDelay1,minDelay1);
+  }
+    // digitalWrite(enPin, HIGH);
+  delay(1000);
   // enableMotionTask(false);
 }
 ISR(TIMER1_COMPA_vect)
@@ -95,7 +124,7 @@ ISR(TIMER1_COMPA_vect)
   motionDriver1.motionControlLoop();
   // motionDriver2.motionControlLoop();
 }
-#else
+#elif defined PULSE_SAMPLE 
 // pin numbers
 const int analogPin = A0;
 const int enablePin = 8;
@@ -209,5 +238,67 @@ void loop()
   delay(1000);
   long currentTime = millis();
   Serial.println(currentTime - startTime);
+}
+#else
+#include <AccelStepper.h>
+
+// Define pins for Stepper A and B
+AccelStepper stepperA(AccelStepper::DRIVER, 2, 5); // (Type, Step, Dir)
+AccelStepper stepperB(AccelStepper::DRIVER, 4, 7);
+
+// Configuration for the "Master" (the motor with the longest move)
+float masterMaxSpeed = 500000.0;
+float masterAccel = 500000.0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Example move: Motor A moves 2000 steps, Motor B moves 500 steps
+  moveToSynchronized(20000, 10000);
+  
+  delay(20000); // Wait before next move
+  
+  moveToSynchronized(0, 0); // Move back to start
+  delay(2000);
+}
+
+void moveToSynchronized(long targetA, long targetB) {
+  long distA = abs(targetA - stepperA.currentPosition());
+  long distB = abs(targetB - stepperB.currentPosition());
+
+  // Determine the Master (longest path) and the Ratio
+  float ratio;
+  if (distA >= distB) {
+    // Motor A is Master
+    ratio = (distA > 0) ? (float)distB / distA : 0;
+    
+    stepperA.setMaxSpeed(masterMaxSpeed);
+    stepperA.setAcceleration(masterAccel);
+    
+    // Scale Motor B to match Motor A's timing
+    stepperB.setMaxSpeed(masterMaxSpeed * ratio);
+    stepperB.setAcceleration(masterAccel * ratio);
+  } else {
+    // Motor B is Master
+    ratio = (distB > 0) ? (float)distA / distB : 0;
+    
+    stepperB.setMaxSpeed(masterMaxSpeed);
+    stepperB.setAcceleration(masterAccel);
+    
+    // Scale Motor A to match Motor B's timing
+    stepperA.setMaxSpeed(masterMaxSpeed * ratio);
+    stepperA.setAcceleration(masterAccel * ratio);
+  }
+
+  stepperA.moveTo(targetA);
+  stepperB.moveTo(targetB);
+
+  // Run both until they reach the target
+  while (stepperA.isRunning() || stepperB.isRunning()) {
+    stepperA.run();
+    stepperB.run();
+  }
 }
 #endif

@@ -59,7 +59,7 @@ class SmoothMotion {
     SmoothMotion(uint32_t id, int stepPin1, int stepPin2, int stepPin3, int stepPin4);
 
     void init();
-    void setupTarget(int stepsAccel, int stepsCruise, int stepsDecel, 
+    void setupTarget(uint32_t stepsAccel, uint32_t stepsCruise, uint32_t stepsDecel, 
       int direction, bool isAccel, uint32_t accelStartWaitPulse, uint32_t minWaitPulse);
     void motionControlLoop();
     void pulseLoop();
