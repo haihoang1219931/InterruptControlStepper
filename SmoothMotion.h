@@ -74,7 +74,7 @@ class SmoothMotion {
     uint32_t m_totalPulse;
     bool m_enableLogPulse;
 
-  private:
+  public:
     uint32_t m_id;
     uint32_t m_minWaitPulse;
     uint8_t m_statePulse;

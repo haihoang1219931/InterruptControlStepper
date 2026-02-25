@@ -1,3 +1,4 @@
+// #define STEPPER_MINI
 #define MOTION_TEST
 #ifdef MOTION_TEST
 #include "SmoothMotion.h"
@@ -9,8 +10,26 @@
 
 #define limitX 13 // X.LIMIT
 #define limitY 10 // Y.LIMIT
+
+#define miniStepperUpdownPin1 34
+#define miniStepperUpdownPin2 36
+#define miniStepperUpdownPin3 38
+#define miniStepperUpdownPin4 40
+
+#define miniStepperGripperPin1 24
+#define miniStepperGripperPin2 26
+#define miniStepperGripperPin3 28
+#define miniStepperGripperPin4 30
+
+#define limitUpdown 11
+#define limitGripper 62 // A8
+
 SmoothMotion motionDriver1(1,enPin, dirXPin, stepXPin);
 SmoothMotion motionDriver2(2,enPin, dirYPin, stepYPin);
+SmoothMotion motionUpdown(5,miniStepperUpdownPin1,miniStepperUpdownPin2,
+  miniStepperUpdownPin3,miniStepperUpdownPin4);
+SmoothMotion motionGripper(0,miniStepperGripperPin1,miniStepperGripperPin2,
+  miniStepperGripperPin3,miniStepperGripperPin4);
 float dZero(float acceleration) {
   float _c0 = 0.676 * sqrt(2.0 / acceleration) * 1000000.0; // Equation 15
   return _c0;
@@ -22,14 +41,18 @@ void enableMotionTask(bool enable)
   else
     TIMSK1 &= ~(1 << OCIE1A);
 }
-uint32_t ratio1 = 1;
-uint32_t totalSteps1 = 10000 / ratio1;
-uint32_t startDelay1 = 800 * ratio1;
-uint32_t minDelay1 = 4 * ratio1;
-uint32_t ratio2 = 4;
-uint32_t totalSteps2 = 10000 / ratio2;
-uint32_t startDelay2 = 100 * ratio2;
-uint32_t minDelay2 = 4 * ratio2;
+uint32_t ratio1 ;
+uint32_t totalSteps1;
+uint32_t startDelay1;
+uint32_t minDelay1;
+uint32_t ratio2;
+uint32_t totalSteps2;
+uint32_t startDelay2;
+uint32_t minDelay2;
+uint32_t ratio3;
+uint32_t totalSteps3;
+uint32_t startDelay3;
+uint32_t minDelay3;
 int dir =1;
 void setup()
 {
@@ -48,15 +71,15 @@ void setup()
   digitalWrite(stepYPin, HIGH);
 
   // initialize timer1
-  float samplerate = 40000.0f;
-  noInterrupts(); // disable all interrupts
-  TCCR1A = 0;
-  TCCR1B = 0;
-  TCNT1 = 0;
-  OCR1A = 16000000.0f / samplerate; // compare match register for IRQ with selected samplerate
-  TCCR1B |= (1 << WGM12); // CTC mode
-  TCCR1B |= (1 << CS10); // no prescaler
-  interrupts(); // enable all interrupts
+  // float samplerate = 40000.0f;
+  // noInterrupts(); // disable all interrupts
+  // TCCR1A = 0;
+  // TCCR1B = 0;
+  // TCNT1 = 0;
+  // OCR1A = 16000000.0f / samplerate; // compare match register for IRQ with selected samplerate
+  // TCCR1B |= (1 << WGM12); // CTC mode
+  // TCCR1B |= (1 << CS10); // no prescaler
+  // interrupts(); // enable all interrupts
   
   Serial.println("===Start===");
   float d0 = dZero(50000000.0f);
@@ -71,15 +94,23 @@ void setup()
   totalSteps2 = 16000 / ratio2;
   startDelay2 = d0 * ratio2;
   minDelay2 = 2 * ratio2;
-  motionDriver1.setupTarget(totalSteps1 * 0 / 10,
-                            totalSteps1 * 10 / 10,
-                            totalSteps1 * 0 / 10,
-                            1,false,startDelay1,minDelay1);
-  motionDriver2.setupTarget(totalSteps2 * 0 / 10,
-                            totalSteps2 * 10 / 10,
-                            totalSteps2 * 0 / 10,
-                            1,false,startDelay2,minDelay2);
-  enableMotionTask(true);
+  ratio3 = 500;
+  totalSteps3 = 16000 / ratio3;
+  startDelay3 = d0 * ratio3;
+  minDelay3 = 3 * ratio3;
+  // motionDriver1.setupTarget(totalSteps1 * 0 / 10,
+  //                           totalSteps1 * 10 / 10,
+  //                           totalSteps1 * 0 / 10,
+  //                           1,false,startDelay1,minDelay1);
+  // motionDriver2.setupTarget(totalSteps2 * 0 / 10,
+  //                           totalSteps2 * 10 / 10,
+  //                           totalSteps2 * 0 / 10,
+  //                           1,false,startDelay2,minDelay2);
+  motionUpdown.setupTarget(totalSteps3 * 0 / 10,
+                            totalSteps3 * 10 / 10,
+                            totalSteps3 * 0 / 10,
+                            1,false,2,minDelay3);
+  // enableMotionTask(true);
   // while(motionDriver1.getCurrentSteps() < totalSteps1)
   // for(int i=0;i<183280;i++)
   // {
@@ -103,32 +134,74 @@ void setup()
   // Serial.print(motionDriver2.getCurrentSteps());
   // Serial.print("/");
   // Serial.println(totalSteps2);
+    // while(motionUpdown.getCurrentSteps() < totalSteps3)
+  int m_pin1 = 34;
+  int m_pin2 = 36;
+  int m_pin3 = 38;
+  int m_pin4 = 40;
+  for(int i=0;i<228;i++)
+  {
+    // motionUpdown.motionControlLoop();
+    motionUpdown.m_statePulse = STATE_COMMAND1;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND2;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND3;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND4;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND5;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND6;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND7;
+    motionUpdown.pulseLoop();
+    delay(1);
+    motionUpdown.m_statePulse = STATE_COMMAND8;
+    motionUpdown.pulseLoop();
+    delay(1);
+  }
+  Serial.print("M3 totalPulse");
+  Serial.println(motionUpdown.m_totalPulse);
+  Serial.print("M3 countStep: ");
+  Serial.print(motionUpdown.getCurrentSteps());
+  Serial.print("/");
+  Serial.println(totalSteps3);
   
 }
 void loop()
 {
-  if(motionDriver1.getCurrentSteps() >= totalSteps1 && 
-    motionDriver2.getCurrentSteps() >= totalSteps2) {
-    enableMotionTask(false);
-    dir=-dir;
-    digitalWrite(dirXPin, dir > 0 ? LOW:HIGH);
-    digitalWrite(dirYPin, dir > 0 ? LOW:HIGH);
-    motionDriver1.setupTarget(totalSteps1 * 0 / 10,
-                            totalSteps1 * 10 / 10,
-                            totalSteps1 * 0 / 10,
-                            -1,false,startDelay1,minDelay1);
-    motionDriver2.setupTarget(totalSteps2 * 0 / 10,
-                            totalSteps2 * 10 / 10,
-                            totalSteps2 * 0 / 10,
-                            -1,false,startDelay2,minDelay2);
-    enableMotionTask(true);                            
-  }
-  delay(1000);
+  // if(motionDriver1.getCurrentSteps() >= totalSteps1 && 
+  //   motionDriver2.getCurrentSteps() >= totalSteps2) {
+  //   enableMotionTask(false);
+  //   dir=-dir;
+  //   digitalWrite(dirXPin, dir > 0 ? LOW:HIGH);
+  //   digitalWrite(dirYPin, dir > 0 ? LOW:HIGH);
+  //   motionDriver1.setupTarget(totalSteps1 * 0 / 10,
+  //                           totalSteps1 * 10 / 10,
+  //                           totalSteps1 * 0 / 10,
+  //                           -1,false,startDelay1,minDelay1);
+  //   motionDriver2.setupTarget(totalSteps2 * 0 / 10,
+  //                           totalSteps2 * 10 / 10,
+  //                           totalSteps2 * 0 / 10,
+  //                           -1,false,startDelay2,minDelay2);
+  //   delay(2000);
+  //   enableMotionTask(true);                            
+  // }
+  // delay(1000);
 }
 ISR(TIMER1_COMPA_vect)
 {
   motionDriver2.motionControlLoop();
   motionDriver1.motionControlLoop();
+  motionUpdown.motionControlLoop();
+  motionGripper.motionControlLoop();
 }
 #elif defined PULSE_SAMPLE 
 // pin numbers
@@ -244,6 +317,143 @@ void loop()
   delay(1000);
   long currentTime = millis();
   Serial.println(currentTime - startTime);
+}
+#elif defined STEPPER_MINI
+// Code by: Gautam Gundap
+
+// Define the pins connected to the IN1-IN4 on the ULN2003 driver board
+const int in1Pin = 34;
+const int in2Pin = 36;
+const int in3Pin = 38;
+const int in4Pin = 40;
+void moveStep(int dir, 
+  int m_pin1,int m_pin2,int m_pin3,int m_pin4,
+  int sleepTime);
+void setup() {
+  // Set the motor control pins as outputs
+  pinMode(in1Pin, OUTPUT);
+  pinMode(in2Pin, OUTPUT);
+  pinMode(in3Pin, OUTPUT);
+  pinMode(in4Pin, OUTPUT);
+}
+int dir = -1;
+void loop() {
+  int stepsPerRevolution = 228;
+  // Rotate the motor one full revolution in one direction
+  for (int i = 0; i < stepsPerRevolution; i++) {
+    // Move one step forward
+    moveStep(dir,in1Pin,in2Pin,in3Pin,in4Pin,1200);
+  }
+  dir = -dir;
+  delay(1000); // Pause for a second
+}
+
+void moveStep(int m_dir, 
+  int m_pin1,int m_pin2,int m_pin3,int m_pin4,
+  int sleepTime)
+{
+  if(m_dir < 0)
+  {
+    //1
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //2
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //3
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //4
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //5
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //6
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+    //7
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+    //8
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+  } 
+  
+  else{
+    //1
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+    //2
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+    //3
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, HIGH);
+    delayMicroseconds(sleepTime);
+    //4
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //5
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, HIGH);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //6
+    digitalWrite(m_pin1, LOW);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //7
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, HIGH);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+    //8
+    digitalWrite(m_pin1, HIGH);
+    digitalWrite(m_pin2, LOW);
+    digitalWrite(m_pin3, LOW);
+    digitalWrite(m_pin4, LOW);
+    delayMicroseconds(sleepTime);
+  }
 }
 #else
 #include <AccelStepper.h>

@@ -20,7 +20,10 @@ SmoothMotion::SmoothMotion(uint32_t id, int stepPin1, int stepPin2, int stepPin3
   m_motorType(MOTOR_TYPE_STEPPER_4_WIRES),
   m_stateControl(MOTOR_EXECUTE_WAIT_COMMAND)
 {
-
+  pinMode(stepPin1, OUTPUT);
+  pinMode(stepPin2, OUTPUT);
+  pinMode(stepPin3, OUTPUT);
+  pinMode(stepPin4, OUTPUT);
 }
 // void setAcc(float acceleration) {
 //   if(acceleration <= 0){return;}
@@ -211,8 +214,8 @@ void SmoothMotion::goHome()
 void SmoothMotion::pulseLoop()
 {
   m_totalPulse ++;
-  // Serial.print("pulseLoop:");
-  // Serial.println(m_totalPulse);
+  // Serial.print("pulseLoop state:");
+  // Serial.println(m_statePulse);
   if(m_motorType == MOTOR_TYPE_STEPPER_2_WIRES) {
     switch(m_statePulse){
       case STATE_HIGH: {
@@ -270,12 +273,12 @@ void SmoothMotion::pulseLoop()
   } else if(m_motorType == MOTOR_TYPE_STEPPER_4_WIRES) {
     switch(m_statePulse){
       case STATE_COMMAND1: {
-        m_pulseCount = 0;
         digitalWrite(m_stepPin1, m_targetDirection < 0 ? HIGH:HIGH);
         digitalWrite(m_stepPin2, m_targetDirection < 0 ? LOW :LOW );
         digitalWrite(m_stepPin3, m_targetDirection < 0 ? LOW :LOW );
         digitalWrite(m_stepPin4, m_targetDirection < 0 ? LOW :HIGH);
         m_statePulse = STATE_WAIT1;
+        m_pulseCount = 0;
       }
       break;
       case STATE_WAIT1: {
@@ -377,7 +380,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT8: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_DONE;
+        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND1;
       }
       break;
     }
