@@ -13,10 +13,6 @@ typedef enum {
 
 
 typedef enum {
-  // For 2 wires stepper
-  STATE_HIGH,
-  STATE_LOW,
-
   // For 4 wires stepper
   STATE_COMMAND1,
   STATE_COMMAND2,
@@ -71,17 +67,17 @@ class SmoothMotion {
     float delayDecel(float stepCount, float delayCur);
     uint32_t getCurrentSteps();
     void changeStateControl(int newState);
-    uint32_t m_totalPulse;
-    bool m_enableLogPulse;
+    
 
   public:
+    uint32_t m_totalPulse;
+    
     uint32_t m_id;
     uint32_t m_minWaitPulse;
-    uint8_t m_statePulse;
+    
     float m_numWaitPulse;
     uint32_t m_pulseCount;
 
-    uint8_t m_stateControl;
     
     uint32_t m_numStepAccel;
     uint32_t m_numStepCruise;
@@ -97,16 +93,22 @@ class SmoothMotion {
     
     int m_targetStep;
     int m_targetDirection;
-    bool m_isAccel;
+    
 
     // pin numbers
-    MOTOR_TYPE m_motorType;
+    
     int m_enablePin;
     int m_dirPin;
     int m_stepPin1;
     int m_stepPin2;
     int m_stepPin3;
     int m_stepPin4;
+
+    int m_motorType;
+    bool m_isAccel;
+    bool m_enableLogPulse;
+    uint8_t m_statePulse;
+    uint8_t m_stateControl;
 };
 
 #endif // SMOOTHMOTION_H

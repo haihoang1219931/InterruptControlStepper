@@ -71,46 +71,49 @@ void setup()
   digitalWrite(stepYPin, HIGH);
 
   // initialize timer1
-  // float samplerate = 40000.0f;
-  // noInterrupts(); // disable all interrupts
-  // TCCR1A = 0;
-  // TCCR1B = 0;
-  // TCNT1 = 0;
-  // OCR1A = 16000000.0f / samplerate; // compare match register for IRQ with selected samplerate
-  // TCCR1B |= (1 << WGM12); // CTC mode
-  // TCCR1B |= (1 << CS10); // no prescaler
-  // interrupts(); // enable all interrupts
+  float samplerate = 20000.0f;
+  noInterrupts(); // disable all interrupts
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
+  OCR1A = 16000000.0f / samplerate; // compare match register for IRQ with selected samplerate
+  TCCR1B |= (1 << WGM12); // CTC mode
+  TCCR1B |= (1 << CS10); // no prescaler
+  interrupts(); // enable all interrupts
   
   Serial.println("===Start===");
   float d0 = dZero(50000000.0f);
-  d0 = 2;
+  d0 = 1;
   Serial.print("dZero: ");
   Serial.println(d0);
-  ratio1 = 2;
-  totalSteps1 = 16000 / ratio1;
-  startDelay1 = d0 * ratio1;
-  minDelay1 = 2 * ratio1;
-  ratio2 = 10;
-  totalSteps2 = 16000 / ratio2;
-  startDelay2 = d0 * ratio2;
-  minDelay2 = 2 * ratio2;
-  ratio3 = 500;
-  totalSteps3 = 16000 / ratio3;
-  startDelay3 = d0 * ratio3;
-  minDelay3 = 3 * ratio3;
-  // motionDriver1.setupTarget(totalSteps1 * 0 / 10,
-  //                           totalSteps1 * 10 / 10,
-  //                           totalSteps1 * 0 / 10,
-  //                           1,false,startDelay1,minDelay1);
-  // motionDriver2.setupTarget(totalSteps2 * 0 / 10,
-  //                           totalSteps2 * 10 / 10,
-  //                           totalSteps2 * 0 / 10,
-  //                           1,false,startDelay2,minDelay2);
+  
+  totalSteps1 = 800;
+  startDelay1 = 24;
+  minDelay1 = 2;
+
+  ratio2 = 40;
+  totalSteps2 = 78;
+  startDelay2 = 246;
+  minDelay2 = 2;
+
+  ratio3 = 14;
+  totalSteps3 = 229;
+  startDelay3 = 21;
+  minDelay3 = 21;
+
+  motionDriver1.setupTarget(totalSteps1 * 0 / 10,
+                            totalSteps1 * 10 / 10,
+                            totalSteps1 * 0 / 10,
+                            1,false,startDelay1,minDelay1);
+  motionDriver2.setupTarget(totalSteps2 * 0 / 10,
+                            totalSteps2 * 10 / 10,
+                            totalSteps2 * 0 / 10,
+                            1,false,startDelay2,minDelay2);
   motionUpdown.setupTarget(totalSteps3 * 0 / 10,
                             totalSteps3 * 10 / 10,
                             totalSteps3 * 0 / 10,
-                            1,false,2,minDelay3);
-  // enableMotionTask(true);
+                            1,false,startDelay3,minDelay3);
+  enableMotionTask(true);
   // while(motionDriver1.getCurrentSteps() < totalSteps1)
   // for(int i=0;i<183280;i++)
   // {
@@ -135,73 +138,52 @@ void setup()
   // Serial.print("/");
   // Serial.println(totalSteps2);
     // while(motionUpdown.getCurrentSteps() < totalSteps3)
-  int m_pin1 = 34;
-  int m_pin2 = 36;
-  int m_pin3 = 38;
-  int m_pin4 = 40;
-  for(int i=0;i<228;i++)
-  {
-    // motionUpdown.motionControlLoop();
-    motionUpdown.m_statePulse = STATE_COMMAND1;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND2;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND3;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND4;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND5;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND6;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND7;
-    motionUpdown.pulseLoop();
-    delay(1);
-    motionUpdown.m_statePulse = STATE_COMMAND8;
-    motionUpdown.pulseLoop();
-    delay(1);
-  }
-  Serial.print("M3 totalPulse");
-  Serial.println(motionUpdown.m_totalPulse);
-  Serial.print("M3 countStep: ");
-  Serial.print(motionUpdown.getCurrentSteps());
-  Serial.print("/");
-  Serial.println(totalSteps3);
+  // for(uint32_t i=0;i<72960;i++)
+  // {
+  //   motionUpdown.motionControlLoop();
+  //   // motionUpdown.pulseLoop();
+  //   delayMicroseconds(25);
+  // }
+  // Serial.print("M3 totalPulse");
+  // Serial.println(motionUpdown.m_totalPulse);
+  // Serial.print("M3 countStep: ");
+  // Serial.print(motionUpdown.getCurrentSteps());
+  // Serial.print("/");
+  // Serial.println(totalSteps3);
   
 }
 void loop()
 {
-  // if(motionDriver1.getCurrentSteps() >= totalSteps1 && 
-  //   motionDriver2.getCurrentSteps() >= totalSteps2) {
-  //   enableMotionTask(false);
-  //   dir=-dir;
-  //   digitalWrite(dirXPin, dir > 0 ? LOW:HIGH);
-  //   digitalWrite(dirYPin, dir > 0 ? LOW:HIGH);
-  //   motionDriver1.setupTarget(totalSteps1 * 0 / 10,
-  //                           totalSteps1 * 10 / 10,
-  //                           totalSteps1 * 0 / 10,
-  //                           -1,false,startDelay1,minDelay1);
-  //   motionDriver2.setupTarget(totalSteps2 * 0 / 10,
-  //                           totalSteps2 * 10 / 10,
-  //                           totalSteps2 * 0 / 10,
-  //                           -1,false,startDelay2,minDelay2);
-  //   delay(2000);
-  //   enableMotionTask(true);                            
-  // }
-  // delay(1000);
+  if(motionDriver1.getCurrentSteps() >= totalSteps1 && 
+    motionDriver2.getCurrentSteps() >= totalSteps2 &&
+    motionUpdown.getCurrentSteps() >= totalSteps3) {
+    enableMotionTask(false);
+    dir=-dir;
+    digitalWrite(dirXPin, dir > 0 ? LOW:HIGH);
+    digitalWrite(dirYPin, dir > 0 ? LOW:HIGH);
+    motionDriver1.setupTarget(totalSteps1 * 0 / 10,
+                            totalSteps1 * 10 / 10,
+                            totalSteps1 * 0 / 10,
+                            dir,false,startDelay1,minDelay1);
+    motionDriver2.setupTarget(totalSteps2 * 0 / 10,
+                            totalSteps2 * 10 / 10,
+                            totalSteps2 * 0 / 10,
+                            dir,false,startDelay2,minDelay2);
+    motionUpdown.setupTarget(totalSteps3 * 0 / 10,
+                            totalSteps3 * 10 / 10,
+                            totalSteps3 * 0 / 10,
+                            dir,false,startDelay3,minDelay3);
+    delay(2000);
+    enableMotionTask(true);                            
+  }
+  delay(1000);
 }
 ISR(TIMER1_COMPA_vect)
 {
   motionDriver2.motionControlLoop();
   motionDriver1.motionControlLoop();
   motionUpdown.motionControlLoop();
-  motionGripper.motionControlLoop();
+  // motionGripper.motionControlLoop();
 }
 #elif defined PULSE_SAMPLE 
 // pin numbers

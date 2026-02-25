@@ -49,7 +49,8 @@ void SmoothMotion::setupTarget(
   m_stepCountAccel = 0;
   m_stepCountCruise = 0;
   m_stepCountDecel = 0;
-
+  Serial.print(" direction:");
+  Serial.print(m_targetDirection);
   Serial.print(" m_numWaitPulse:");
   Serial.print(m_numWaitPulse);
   Serial.print(" m_numStepAccel:");
@@ -99,13 +100,7 @@ void SmoothMotion::changeStateControl(int newState)
   if(m_stateControl != newState) {
     m_stateControl = newState;
     if(m_stateControl != MOTOR_EXECUTE_DONE) {
-      switch(m_motorType){
-        case MOTOR_TYPE_STEPPER_2_WIRES: m_statePulse = STATE_HIGH;
-        break;
-        case MOTOR_TYPE_STEPPER_4_WIRES: m_statePulse = STATE_COMMAND1;
-        break;
-      }
-      
+      m_statePulse = STATE_COMMAND1;
     }
     // switch(m_stateControl){
     //   case MOTOR_EXECUTE_INCREASE_SPEED: Serial.println("Accel");
@@ -152,7 +147,7 @@ void SmoothMotion::motionControlLoop() {
 void SmoothMotion::increaseSpeed() {
   pulseLoop();
   if(m_statePulse != STATE_DONE) return;
-  m_statePulse = STATE_HIGH;
+  m_statePulse = STATE_COMMAND1;
   m_stepCountAccel ++;
   m_numWaitPulse = delayAccel(m_stepCountAccel,m_numWaitPulse);
 #ifdef DEBUG_ACCEL
@@ -176,7 +171,7 @@ void SmoothMotion::increaseSpeed() {
 void SmoothMotion::cruiseSpeed() {
   pulseLoop();
   if(m_statePulse != STATE_DONE) return;
-  m_statePulse = STATE_HIGH;
+  m_statePulse = STATE_COMMAND1;
   m_stepCountCruise ++;
   if(m_stepCountCruise >= m_numStepCruise){
     // Serial.print(" ID: ");
@@ -192,7 +187,7 @@ void SmoothMotion::cruiseSpeed() {
 void SmoothMotion::decreaseSpeed() {
   pulseLoop();
   if(m_statePulse != STATE_DONE) return;
-  m_statePulse = STATE_HIGH;
+  m_statePulse = STATE_COMMAND1;
   m_stepCountDecel ++;
   m_numWaitPulse = delayDecel(m_numStepDecel - m_stepCountDecel,m_numWaitPulse);  
   if(m_stepCountDecel >= m_numStepDecel) {
@@ -215,10 +210,12 @@ void SmoothMotion::pulseLoop()
 {
   m_totalPulse ++;
   // Serial.print("pulseLoop state:");
-  // Serial.println(m_statePulse);
+  // Serial.print(m_statePulse);
+  // Serial.print(" P-");
+  // Serial.println(m_totalPulse);
   if(m_motorType == MOTOR_TYPE_STEPPER_2_WIRES) {
     switch(m_statePulse){
-      case STATE_HIGH: {
+      case STATE_COMMAND1: {
         m_pulseCount = 0;
         digitalWrite(m_stepPin1,HIGH);
         m_statePulse = STATE_WAIT1;
@@ -240,15 +237,15 @@ void SmoothMotion::pulseLoop()
           Serial.println(m_numWaitPulse);
         }
 #endif
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_LOW;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND2;
       }
       break;
-      case STATE_LOW: {
+      case STATE_COMMAND2: {
         digitalWrite(m_stepPin1,LOW);
         m_pulseCount = 0;
 #ifdef DEBUG_PULSE
         if(m_enableLogPulse) {
-          Serial.print("PULSE STATE_LOW: ");
+          Serial.print("PULSE LOW: ");
           Serial.println(m_pulseCount);
         }
 #endif
@@ -265,7 +262,7 @@ void SmoothMotion::pulseLoop()
           Serial.println(m_numWaitPulse);
         }
 #endif        
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_DONE;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_DONE;
       }
       break;
     }
@@ -283,7 +280,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT1: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND2;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND2;
       }
       break;
       case STATE_COMMAND2: {
@@ -297,7 +294,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT2: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND3;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND3;
       }
       break;
       case STATE_COMMAND3: {
@@ -311,7 +308,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT3: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND4;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND4;
       }
       break;
       case STATE_COMMAND4: {
@@ -325,7 +322,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT4: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND5;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND5;
       }
       break;
       case STATE_COMMAND5: {
@@ -339,7 +336,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT5: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND6;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND6;
       }
       break;
       case STATE_COMMAND6: {
@@ -353,7 +350,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT6: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND7;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND7;
       }
       break;
       case STATE_COMMAND7: {
@@ -367,7 +364,7 @@ void SmoothMotion::pulseLoop()
       break;
       case STATE_WAIT7: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND8;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_COMMAND8;
       }
       break;
       case STATE_COMMAND8: {
@@ -376,11 +373,12 @@ void SmoothMotion::pulseLoop()
         digitalWrite(m_stepPin3, m_targetDirection < 0 ? LOW :LOW );
         digitalWrite(m_stepPin4, m_targetDirection < 0 ? HIGH:LOW );
         m_statePulse = STATE_WAIT8;
+        m_pulseCount = 0;
       }
       break;
       case STATE_WAIT8: {
         m_pulseCount++;
-        if(m_pulseCount >= m_numWaitPulse-1) m_statePulse = STATE_COMMAND1;
+        if(m_pulseCount >= (uint32_t)(m_numWaitPulse-1)) m_statePulse = STATE_DONE;
       }
       break;
     }
