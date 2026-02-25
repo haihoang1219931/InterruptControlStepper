@@ -44,7 +44,7 @@ void setup()
   digitalWrite(enPin, LOW);
   digitalWrite(dirXPin, LOW);
   digitalWrite(stepXPin, HIGH);
-  digitalWrite(dirYPin, HIGH);
+  digitalWrite(dirYPin, LOW);
   digitalWrite(stepYPin, HIGH);
 
   // initialize timer1
