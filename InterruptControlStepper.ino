@@ -185,6 +185,53 @@ ISR(TIMER1_COMPA_vect)
   motionUpdown.motionControlLoop();
   // motionGripper.motionControlLoop();
 }
+#elif defined STEPPER_CONTROL_SAMPLE 
+int delayTime = 1500;
+uint8_t enPin = 8;
+uint8_t stepPin = 4;
+uint8_t dirPin = 7;
+uint8_t dirClockPin = 9;
+uint8_t dirClockWisePin = 10;
+uint8_t dirAnalogRead = A0;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(38400);
+  Serial.println("===Start===");
+  pinMode(dirClockPin, INPUT_PULLUP);
+  pinMode(dirClockWisePin, INPUT_PULLUP);
+  pinMode(enPin, OUTPUT);
+  pinMode(dirPin, OUTPUT);
+  pinMode(stepPin, OUTPUT);
+
+  digitalWrite(enPin, LOW);
+  digitalWrite(dirPin, HIGH);
+  delay(1000);
+  
+  Serial.println("===Setup done===");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  int readClock = digitalRead(dirClockPin);
+  int readClockWise = digitalRead(dirClockWisePin);
+  if(readClock != readClockWise) {
+    digitalWrite(dirPin, readClock);
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(delayTime);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(delayTime);
+  }
+  else{
+    int sensorValue = analogRead(dirAnalogRead);
+    Serial.print("C[");
+    Serial.print(readClock);
+    Serial.print("] CW[");
+    Serial.print(readClockWise);
+    Serial.print("] Sensor:");
+    Serial.println(sensorValue);
+    delay(1000);
+  }
+}
 #elif defined PULSE_SAMPLE 
 // pin numbers
 const int analogPin = A0;
